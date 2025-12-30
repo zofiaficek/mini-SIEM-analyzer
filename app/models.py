@@ -14,15 +14,15 @@ class User(UserMixin, db.Model):
         # TODO: ZADANIE 1 - BEZPIECZEŃSTWO
         # Zaimplementuj hashowanie hasła przy użyciu generate_password_hash.
         # Wynik zapisz do pola self.password_hash.
-        pass
+        
+        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         # TODO: ZADANIE 1 - BEZPIECZEŃSTWO
         # Zaimplementuj weryfikację hasła przy użyciu check_password_hash.
         # Metoda ma zwracać True jeśli hasło jest poprawne, False w przeciwnym razie.
         
-        # TYMCZASOWO: Zwracamy True, żeby nie blokować testów (do zmiany!)
-        return True 
+        return check_password_hash(self.password_hash, password)
 
 # === MODELE SYSTEMOWE (GOTOWE) ===
 class Host(db.Model):
@@ -64,6 +64,14 @@ class IPRegistry(db.Model):
     ip_address = db.Column(db.String(50), unique=True, nullable=False)
     status = db.Column(db.String(20), default='UNKNOWN') # TRUSTED, BANNED, UNKNOWN
     last_seen = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "ip_address": self.ip_address,
+            "status": self.status,
+            "last_seen": self.last_seen.strftime('%Y-%m-%d %H:%M:%S') if self.last_seen else "-"
+        }
 
 class Alert(db.Model):
     __tablename__ = 'alerts'

@@ -1,7 +1,7 @@
 import { createEl, clearContainer } from './dom.js';
 import { fetchHosts, checkHostStatus, triggerLogFetch } from './api.js'; 
 // TODO: Po uzupełnieniu api.js odkomentuj import poniżej:
-// import { fetchAlerts } from './api.js';
+import { fetchAlerts } from './api.js';
 
 const hostsContainer = document.getElementById('hostsContainer');
 const alertsBody = document.getElementById('alertsBody');
@@ -139,10 +139,10 @@ async function refreshAlertsTable() {
         // Obecnie funkcja fetchAlerts nie istnieje w api.js.
         // Dopóki jej nie napiszesz, poniższa linia będzie rzucać błąd (Uncaught ReferenceError).
         
-        // const alerts = await fetchAlerts(); 
+        const alerts = await fetchAlerts(); 
         
         // TYMCZASOWO: Pusta lista, żeby Dashboard się ładował
-        const alerts = []; 
+        // const alerts = []; 
 
         if (alerts.length === 0) {
             const row = createEl('tr', [], '', alertsBody);
@@ -158,7 +158,7 @@ async function refreshAlertsTable() {
             
             const utcDate = new Date(alert.timestamp.replace(" ", "T") + "Z");
             createEl('td', [], utcDate.toLocaleString(), row);
-            createEl('td', ['fw-bold'], alert.host_name, row);
+            createEl('td', ['fw-bold'], alert.hostname, row);
             createEl('td', [], alert.alert_type, row); 
             createEl('td', ['font-monospace'], alert.source_ip || '-', row);
             createEl('td', [], alert.message, row);

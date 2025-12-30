@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white text-center">Logowanie</div>
+                
+                <div class="card-body">
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}  <!--w requirements.txt pojawia się biblioteka Flask-WTF mająca autmatycznie włączoną ochronę CSRF, potrzebujemy Tokenu CSRF-->
+
+                        <!-- login -->
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label fw-bold") }}
+                            {{ form.username(class="form-control", placeholder="Wpisz login") }}
+                            
+                            {% for error in form.username.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- hasło -->
+                        <div class="mb-4">
+                            {{ form.password.label(class="form-label fw-bold") }}
+                            {{ form.password(class="form-control", placeholder="Wpisz hasło") }}
+                            
+                            {% for error in form.password.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- button logowania -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

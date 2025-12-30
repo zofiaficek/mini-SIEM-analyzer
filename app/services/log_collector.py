@@ -25,7 +25,8 @@ class LogCollector:
         logs = []
         
         # Budowanie komendy: pobierz JSON z journalctl
-        cmd = "sudo journalctl -u ssh -o json --no-pager"
+        #cmd = "sudo journalctl -u sshd -o json --no-pager"
+        cmd = "sudo journalctl SYSLOG_IDENTIFIER=sshd -o json --no-pager"
         
         if last_fetch_time:
             since_str = last_fetch_time.strftime("%Y-%m-%d %H:%M:%S")

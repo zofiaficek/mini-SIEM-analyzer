@@ -30,8 +30,7 @@ export async function initAdmin() {
     if (document.getElementById('saveHostBtn')) {
         document.getElementById('saveHostBtn').addEventListener('click', handleSaveHost);
     }
-
-
+ 
     // TODO: ZADANIE 3 (Frontend) - THREAT INTEL
     // Odkomentuj obsługę zdarzeń dla Rejestru IP, gdy odblokujesz HTML w config.html
     
@@ -118,6 +117,7 @@ async function handleSaveHost() {
 
 
 // ======================= LOGIKA IP REGISTRY (DO ODBLOKOWANIA) =======================
+
 
 // TODO: ZADANIE 3 (Frontend) - Odkomentuj całą poniższą sekcję
 // Uwaga: Funkcje fetchIPs, createIP itd. muszą zostać zaimplementowane w api.js!

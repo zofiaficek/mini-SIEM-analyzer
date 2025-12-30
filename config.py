@@ -11,10 +11,20 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///../instance/lab7.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Konfiguracja SSH (Domyślne dla Vagranta)
-    SSH_DEFAULT_USER = os.getenv('SSH_DEFAULT_USER', 'vagrant')
-    SSH_DEFAULT_PORT = int(os.getenv('SSH_DEFAULT_PORT', 2222))
-    SSH_KEY_FILE = os.getenv('SSH_KEY_FILE', '') 
+    '''# Konfiguracja SSH (Domyślne dla Vagranta)
+    SSH_DEFAULT_USER = os.getenv('SSH_DEFAULT_USER', 'zosia')
+    SSH_DEFAULT_PORT = int(os.getenv('SSH_DEFAULT_PORT', 2223))
+    SSH_KEY_FILE = os.getenv('SSH_KEY_FILE', '') '''
+
+    SSH_DEFAULT_HOST = "127.0.0.1"
+    SSH_DEFAULT_USER = "zosia"
+    SSH_DEFAULT_PORT = 2223
+
+    # 🔑 jedna z dwóch metod autoryzacji (tylko jedna powinna być aktywna)
+    SSH_PASSWORD = "zosia123"   # logowanie hasłem
+    SSH_KEY_FILE = None
+
+    
 
     # Folder na logi (Parquet)
     STORAGE_FOLDER = Path.cwd() / 'storage' # Domyślny folder na logi
