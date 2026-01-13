@@ -53,7 +53,7 @@ class LogAnalyzer:
             ip_entry = IPRegistry.query.filter_by(ip_address=ip).first()
 
             severity = 'WARNING'
-            message = f"Alert - Wykryto nieudane logowanie z IP ({ip})"
+            message = f"ALERT - Wykryto nieudane logowanie z IP ({ip})"
             
             # 2. Jeśli NIE MA go w bazie -> Dodaj go ze statusem 'UNKNOWN' i obecnym czasem (last_seen).
             if not ip_entry:
@@ -72,20 +72,22 @@ class LogAnalyzer:
             #    - Jeśli IP ma status 'BANNED' -> Zmień poziom na 'CRITICAL' i dopisz to w treści.
                 if ip_entry.status == 'BANNED':
                     severity = 'CRITICAL'
-                    message = f"Alert krytyczny - Próba logowania ze zbanowanego IP ({ip})"
+                    message = f"ALERT KRYTYCZNY - Próba logowania ze zbanowanego IP ({ip})"
             
             #    - Jeśli IP ma status 'TRUSTED' -> Możesz pominąć alert (continue) lub ustawić 'INFO'.
                 elif ip_entry.status == 'TRUSTED':
-                    continue
+                    #continue
+                    severity = 'INFO'
+                    message = f"Błąd przy próbie logowania z zaufanego IP: ({ip})"
             
             # 5. Stwórz obiekt Alert:
             new_alert = Alert(
-                host_id=host_id,
-                alert_type=row['alert_type'],
-                source_ip=ip,
-                severity=severity,  #<-- To musi być dynamiczne
-                message=message,    #<-- To też
-                timestamp=datetime.now(timezone.utc)
+                host_id  =host_id,
+                timestamp = datetime.now(timezone.utc),
+                alert_type = row['alert_type'],
+                message = message,
+                severity = severity,
+                source_ip = ip
             )
             
             # 6. Dodaj do sesji (db.session.add) i zwiększ licznik alerts_created.

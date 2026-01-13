@@ -166,7 +166,8 @@ async function refreshAlertsTable() {
             const badgeCell = createEl('td', [], '', row);
             const badgeClasses = ['badge'];
             if (alert.severity === 'CRITICAL') badgeClasses.push('bg-danger');
-            else badgeClasses.push('bg-warning', 'text-dark');
+            if (alert.severity === 'WARNING') badgeClasses.push('bg-warning', 'text-dark');
+            else badgeClasses.push('bg-success', 'text-light');
             createEl('span', badgeClasses, alert.severity, badgeCell);
         });
     } catch (err) {

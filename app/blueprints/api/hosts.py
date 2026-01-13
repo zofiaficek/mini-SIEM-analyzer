@@ -161,12 +161,14 @@ def fetch_logs(host_id):
             
             with RemoteClient(host=host.ip_address, user=ssh_user, port=ssh_port, key_file=ssh_key, password=ssh_pass) as client:
                 # 3 - Przekazujemy last_fetch dla pobierania przyrostowego, (aby pobrac tylko nowe logi)
+                
                 #logs = LogCollector.get_linux_logs(client, last_fetch_time=log_source.last_fetch)
                 logs = LogCollector.get_linux_logs(client, last_fetch_time=fetch_start_time)
         
         elif host.os_type == "WINDOWS":
             #  3 - W przypadku Windows testy sugerują lokalne wywołanie przez WinClient
             with WinClient() as client:
+                
                 # logs = LogCollector.get_windows_logs(client, last_fetch_time=log_source.last_fetch)
                 logs = LogCollector.get_windows_logs(client, last_fetch_time=fetch_start_time)
 
@@ -183,8 +185,9 @@ def fetch_logs(host_id):
         # 6 - Rejestracja w LogArchive
         archive = LogArchive(
             host_id=host.id,
-            filename=filename,  # Teraz to jest czysty string, a nie krotka
-            timestamp=datetime.now(timezone.utc) # Jeśli Twój model ma pole timestamp
+            filename=filename, 
+            timestamp=datetime.now(timezone.utc),
+            record_count = log_count
         )
         db.session.add(archive)
 
