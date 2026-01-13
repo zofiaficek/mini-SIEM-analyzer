@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.extensions import db
 from app.models import Alert, IPRegistry, Host
 from app.services.data_manager import DataManager
@@ -83,7 +83,7 @@ class LogAnalyzer:
             # 5. Stwórz obiekt Alert:
             new_alert = Alert(
                 host_id  =host_id,
-                timestamp = datetime.now(timezone.utc),
+                timestamp=row['timestamp'],
                 alert_type = row['alert_type'],
                 message = message,
                 severity = severity,

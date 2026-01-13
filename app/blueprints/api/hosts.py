@@ -147,8 +147,6 @@ def fetch_logs(host_id):
 
     # żeby sie nie generowały te same alerty w kółko
     fetch_start_time = log_source.last_fetch
-    if fetch_start_time:
-        fetch_start_time = fetch_start_time + timedelta(seconds=1)
 
     logs = []
     try:
@@ -186,7 +184,6 @@ def fetch_logs(host_id):
         archive = LogArchive(
             host_id=host.id,
             filename=filename, 
-            timestamp=datetime.now(timezone.utc),
             record_count = log_count
         )
         db.session.add(archive)
