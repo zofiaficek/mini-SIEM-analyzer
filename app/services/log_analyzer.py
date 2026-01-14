@@ -68,7 +68,7 @@ class LogAnalyzer:
             # 4. Ustal poziom alertu (severity) i treść wiadomości (message):
             #    - Domyślny poziom: 'WARNING'.
 
-            # Automatyczne banowanie (Multi-host attack)
+            # Automatyczne banowanie (Multi-host attack) -> Zadanie dodatkowe 1
             if ip_entry.status == 'UNKNOWN':
                 from datetime import timedelta
                 ten_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=10)

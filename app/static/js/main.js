@@ -1,6 +1,6 @@
 import { initDashboard } from './dashboard.js';
 import { initAdmin } from './admin.js';
-
+// Zadanie dodatkowe 4 - dodanie setupTheme do zmiany motywu
 function setupTheme() {
     const htmlElement = document.getElementById('mainHtml');
     const themeToggle = document.getElementById('themeToggle');
@@ -31,7 +31,7 @@ function setupTheme() {
 }
 
 function main() {
-    
+
     // Inicjalizacja motywu dla każdej strony
     setupTheme();
     const path = window.location.pathname;

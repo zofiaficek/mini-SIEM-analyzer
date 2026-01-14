@@ -198,6 +198,7 @@ async function refreshAlertsTable() {
     }
 }
 /**
+ * Zadanie dodatkowe 2
  * Funkcja generująca i aktualizująca wykres słupkowy Top 5 atakujących adresów IP.
  * Wykorzystuje bibliotekę Chart.js do wizualizacji danych pobranych z systemu SIEM.
  */

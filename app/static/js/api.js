@@ -2,7 +2,7 @@
  * api.js
  * Wrapper na Fetch API z obsługą CSRF
  */
-
+// Zadanie dodatkowe 5 - stworzenie własnego tokena i użycia funkcji securedFetch
 function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 }
