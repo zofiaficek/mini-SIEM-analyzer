@@ -14,12 +14,12 @@ def login():
 
     if form.validate_on_submit():       #czy kliknieto zaloguj[POST] i czy dane sa zgodne (plus czy token csrf jest okej)
         # TODO: ZADANIE 1 - LOGOWANIE
-        # 1. Pobierz użytkownika z bazy danych na podstawie form.username.data
+        # 1. Pobierz użytkownika z bazy danych na podstawie form.username.data, (baza zwraca pierwszego uzytkownika ktorego login zgadza sie z tym co wpisano)
         user = User.query.filter_by(username=form.username.data).first()
         # 2. Sprawdź hasło używając metody user.check_password(form.password.data)
-        if user and user.check_password(form.password.data):
+        if user and user.check_password(form.password.data): #(czy uzytkownik istnieje, i czy jego haslo zgadza sie z tym co wpisano)
         # 3. Jeśli poprawne:
-        #    - użyj funkcji login_user(user)
+        #    - użyj funkcji login_user(user) - jezeli logowanie jest OK to tworzy sesje, przegladarka dostaje cookie ktore iden nas jako zalogowanego admina
             login_user(user)
         #    - wyświetl flash('Zalogowano pomyślnie!', 'success')
             flash('Zalogowano pomyślnie!', 'success')
