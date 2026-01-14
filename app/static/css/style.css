@@ -14,3 +14,13 @@
 #linki a:hover {
     text-decoration: underline;
 }
+
+/* Styl dla kontenera okienka */
+.cyber-badge-box {
+    background-color: #2b1a4d !important; /*zmiana koloru tła*/
+    border: 1px solid #00d2ff !important; /* Kzmiana koloru ramki*/
+    border-radius: 4px;
+    width: 24%;
+    text-align: center;
+    padding: 5px 0;
+}

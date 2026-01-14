@@ -119,7 +119,7 @@ async function handleFetchLogs(host, btn) {
 }
 
 function addBadge(parent, label, value, colorClass) {
-    const box = createEl('div', ['text-center', 'border', 'rounded', 'bg-light', 'py-1'], '', parent);
+    const box = createEl('div', ['cyber-badge-box'], '', parent);
     box.style.width = '24%'; 
     const lbl = createEl('div', ['text-muted', 'text-uppercase'], label, box);
     lbl.style.fontSize = '0.65rem';
@@ -167,7 +167,7 @@ async function refreshAlertsTable() {
             const badgeClasses = ['badge'];
             if (alert.severity === 'CRITICAL') badgeClasses.push('bg-danger');
             if (alert.severity === 'WARNING') badgeClasses.push('bg-warning', 'text-dark');
-            else badgeClasses.push('bg-success', 'text-light');
+            else badgeClasses.push('bg-success', 'text-dark');
             createEl('span', badgeClasses, alert.severity, badgeCell);
         });
     } catch (err) {
