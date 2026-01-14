@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" id="mainHtml" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,13 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <!-- Fragment navbaru -->
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item me-3">
+              <button class="btn btn-link nav-link px-0 text-white border-0" id="themeToggle" type="button">
+                  <span id="themeIcon">☀️</span>
+              </button>
+          </li>
+
           <li class="nav-item">
               <a class="nav-link" href="{{ url_for('ui.index') }}">Dashboard</a>
           </li>

@@ -197,40 +197,68 @@ async function refreshAlertsTable() {
         console.error("Błąd tabeli alertów:", err);
     }
 }
-
+/**
+ * Funkcja generująca i aktualizująca wykres słupkowy Top 5 atakujących adresów IP.
+ * Wykorzystuje bibliotekę Chart.js do wizualizacji danych pobranych z systemu SIEM.
+ */
 function updateAttacksChart(alerts) {
+    // 1. Pobieramy element canvas z dokumentu HTML
     const ctx = document.getElementById('attacksChart');
+    
+    // Zabezpieczenie: jeśli element nie istnieje lub biblioteka Chart.js 
+    // nie załadowała się poprawnie, przerywamy działanie.
     if (!ctx || typeof Chart === 'undefined') return;
 
-    // Agregacja danych dla Top 5 IP
+    // Tworzymy obiekt słownika, gdzie kluczem będzie IP, a wartością liczba wystąpień.
     const counts = {};
-    alerts.forEach(a => {
-        if (a.source_ip && a.source_ip !== '-') {
-            counts[a.source_ip] = (counts[a.source_ip] || 0) + 1;
+    
+    alerts.forEach(alert => {
+        // Ignorujemy puste adresy IP oraz znaki zastępcze '-'
+        if (alert.source_ip && alert.source_ip !== '-') {
+            // Jeśli IP już jest w słowniku, zwiększamy licznik o 1, 
+            // w przeciwnym razie ustawiamy wartość początkową na 1.
+            counts[alert.source_ip] = (counts[alert.source_ip] || 0) + 1;
         }
     });
 
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    
+    // Przekształcamy obiekt na tablicę par [IP, liczba], sortujemy ją malejąco
+    // i wycinamy tylko 5 pierwszych wyników (najwięksi agresorzy).
+    const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1]) 
+        .slice(0, 5);
+
+    // Jeśli wykres już istnieje (np. po odświeżeniu logów), musimy go zniszczyć.
+    // Zapobiega to nakładaniu się nowych danych na stare i błędom wizualnym.
     if (attacksChartInstance) {
         attacksChartInstance.destroy();
     }
 
+    // KONFIGURACJA I RENDEROWANIE NOWEGO WYKRESU
     attacksChartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'bar', // Typ wykresu: słupkowy
         data: {
-            labels: sorted.map(i => i[0]),
+            // Etykiety na osi to adresy IP (pierwszy element pary w tablicy sorted)
+            labels: sorted.map(item => item[0]), 
             datasets: [{
-                label: 'Liczba ataków',
-                data: sorted.map(i => i[1]),
-                backgroundColor: '#dc3545' // Kolor czerwony zgodny z tematyką SIEM
+                label: 'Liczba wykrytych incydentów',
+                // Dane to liczby wystąpień 
+                data: sorted.map(item => item[1]),
+                backgroundColor: '#dc3545', // Kolor czerwony 
+                borderRadius: 4            // Zaokrąglenie końców słupków
             }]
         },
         options: {
-            maintainAspectRatio: false,
-            indexAxis: 'y', // Zmiana na wykres poziomy - czytelniejszy dla IP
+            maintainAspectRatio: false, // Pozwala wykresowi dopasować się do wysokości kontenera
+            indexAxis: 'y',             // Zmiana orientacji na poziomą (lepsza czytelność długich IP)
+            scales: {
+                x: {
+                    beginAtZero: true,  // Oś liczbowa zawsze zaczyna się od zera
+                    ticks: { stepSize: 1 } // Skala co 1 jednostkę (ataki są liczbami całkowitymi)
+                }
+            },
             plugins: {
-                legend: { display: false }
+                legend: { display: false }, // Ukrywamy legendę 
+                tooltip: { enabled: true }  // Wyświetlanie dymka po najechaniu myszką
             }
         }
     });

@@ -15,12 +15,24 @@
     text-decoration: underline;
 }
 
-/* Styl dla kontenera okienka */
+/* Styl dla kontenera okienka - adaptacyjny */
 .cyber-badge-box {
-    background-color: #2b1a4d !important; /*zmiana koloru tła*/
-    border: 1px solid #00d2ff !important; /* Kzmiana koloru ramki*/
+    /* Używamy zmiennych Bootstrapa dla tła i ramek */
+    background-color: var(--bs-tertiary-bg) !important; 
+    border: 1px solid var(--bs-primary) !important;
     border-radius: 4px;
     width: 24%;
     text-align: center;
     padding: 5px 0;
+    transition: all 0.3s ease; /* Płynne przejście kolorów */
+}
+
+[data-bs-theme="light"] .cyber-badge-box {
+    background-color: #f8f9fa !important;
+    border-color: #0d6efd !important;
+}
+
+[data-bs-theme="dark"] body {
+    background-color: #ffffff;
+    color: #212529;
 }
