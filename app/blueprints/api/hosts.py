@@ -1,10 +1,10 @@
 import time
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import login_required
-from datetime import timezone, datetime, timedelta #zeby sie alerty generowaly jak powinny
+from datetime import timezone, datetime
 import os
 
-from app.models import Host, LogSource, LogArchive, Alert, IPRegistry
+from app.models import Host, LogSource, LogArchive, Alert, IPRegistry, Host
 from app.services.remote_client import RemoteClient
 from app.services.win_client import WinClient
 from app.services.log_collector import LogCollector
@@ -145,8 +145,7 @@ def fetch_logs(host_id):
     # 6. Dodaj wpis do LogArchive (historia pobrań).
     # 7. Wywołaj LogAnalyzer.analyze_parquet(filename, host.id) aby wykryć zagrożenia.
 
-    # żeby sie nie generowały te same alerty w kółko
-    fetch_start_time = log_source.last_fetch
+    fetch_start_time = log_source.last_fetch    # pobranie czasu ostatniego pobrania logów
 
     logs = []
     try:
@@ -156,31 +155,28 @@ def fetch_logs(host_id):
             ssh_port = current_app.config.get("SSH_DEFAULT_PORT", 2223)
             ssh_key = current_app.config.get("SSH_KEY_FILE")
             ssh_pass = current_app.config.get("SSH_PASSWORD")
-            
+            # pobieranie danych uwierzytelniajacych aby nawiazac polaczenie
+            # inicjalizacja klienta SSH
             with RemoteClient(host=host.ip_address, user=ssh_user, port=ssh_port, key_file=ssh_key, password=ssh_pass) as client:
-                # 3 - Przekazujemy last_fetch dla pobierania przyrostowego, (aby pobrac tylko nowe logi)
-                
-                #logs = LogCollector.get_linux_logs(client, last_fetch_time=log_source.last_fetch)
+                # wywolanie funkcji zbierajacej logi (pobieranie przyrostowe - tylko nowsze niz fetch_start_time)
                 logs = LogCollector.get_linux_logs(client, last_fetch_time=fetch_start_time)
         
         elif host.os_type == "WINDOWS":
-            #  3 - W przypadku Windows testy sugerują lokalne wywołanie przez WinClient
+            #  w przypadku Windows lokalne wywołanie przez WinClient 
             with WinClient() as client:
-                
-                # logs = LogCollector.get_windows_logs(client, last_fetch_time=log_source.last_fetch)
+                # pobiera logi z windowsa
                 logs = LogCollector.get_windows_logs(client, last_fetch_time=fetch_start_time)
 
         if not logs:
-            return jsonify({"message": "Brak nowych logów do pobrania", "alerts": 0}), 200
+            return jsonify({"message": "Brak nowych logów do pobrania", "alerts": 0}), 200  #jak nie ma nowych logów przerywamy proces - nie ma po co tworzyć nowych plików parquet
         
-        # 4 - Archiwizacja (Data Lake / Parquet) - Metoda save_logs_to_parquet przyjmuje listę słowników i zwraca nazwę pliku
+        # metoda z data_manager.py zwraca filename i ilosc logow
         filename, log_count = DataManager.save_logs_to_parquet(logs, host.id)
 
-        # 5 - Aktualizacja czasu ostatniego pobrania (stanu last_fetch)
-        log_source.last_fetch = max(l['timestamp'] for l in logs)
-        #log_source.last_fetch = datetime.now(timezone.utc)
+        #aktualizacja ostatniego czasu pobrania na czas aktualny
+        log_source.last_fetch = datetime.now(timezone.utc)
 
-        # 6 - Rejestracja w LogArchive
+        # dodaje wpis do log archive
         archive = LogArchive(
             host_id=host.id,
             filename=filename, 
@@ -216,13 +212,13 @@ def fetch_logs(host_id):
 @login_required
 def get_ips():
     ips = IPRegistry.query.order_by(IPRegistry.last_seen.desc()).all()
-    return jsonify([ip.to_dict() for ip in ips])    #Zwróć listę JSON
+    return jsonify([ip.to_dict() for ip in ips])    #pobiera liste wszytskich znanych adresow IP i zwraca w formacie JSON
 
-@api_bp.route("/ips", methods=["POST"])
+@api_bp.route("/ips", methods=["POST"]) #pozwala na reczne dodanie IP do bazy
 @login_required
 def add_ip():
     # Dodaj nowe IP (pamiętaj o commit)
-    data = request.get_json()
+    data = request.get_json()   # bierze wszytsko co zostało wysłane przez przeglądarkę i zamienia format danych JSON na słownik dict
     if not data or 'ip_address' not in data:
         return jsonify({"error": "Brak adresu IP"}), 400
     
@@ -232,19 +228,19 @@ def add_ip():
     )
     db.session.add(new_ip)
     db.session.commit()
-    return jsonify(new_ip.to_dict()), 201
+    return jsonify(new_ip.to_dict()), 201   # tłumaczy dict na json, 201 - utworzono
 
 @api_bp.route("/ips/<int:ip_id>", methods=["PUT"])
 @login_required
 def update_ip(ip_id):
     # Edycja stanu
     ip_entry = IPRegistry.query.get_or_404(ip_id)
-    data = request.get_json()
+    data = request.get_json()   # bierze wszytsko co zostało wysłane przez przeglądarkę i zamienia format danych JSON na słownik dict
     
     if 'status' in data: ip_entry.status = data['status']
     
     db.session.commit()
-    return jsonify(ip_entry.to_dict()), 200
+    return jsonify(ip_entry.to_dict()), 200     # tłumaczy dict na json, 200 - OK
 
 @api_bp.route("/ips/<int:ip_id>", methods=["DELETE"])
 @login_required
@@ -253,7 +249,7 @@ def delete_ip(ip_id):
     ip_entry = IPRegistry.query.get_or_404(ip_id)
     db.session.delete(ip_entry)
     db.session.commit()
-    return jsonify({"message": "Usunięto wpis z rejestru IP"}), 200
+    return jsonify({"message": "Usunięto wpis z rejestru IP"}), 200     # tłumaczy dict na json, 200 - OK
 
 @api_bp.route("/alerts", methods=["GET"])
 @login_required
@@ -265,4 +261,4 @@ def get_recent_alerts():
         a_dict = alert.to_dict()
         a_dict['hostname'] = host.hostname
         output.append(a_dict)
-    return jsonify(output), 200
+    return jsonify(output), 200     # tłumaczy dict na json, 200 - OK

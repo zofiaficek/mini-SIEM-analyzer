@@ -1,7 +1,6 @@
-import pandas as pd
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from app.extensions import db
-from app.models import Alert, IPRegistry, Host
+from app.models import Alert, IPRegistry
 from app.services.data_manager import DataManager
 
 class LogAnalyzer:
