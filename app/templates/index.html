@@ -18,23 +18,10 @@
             <p>Ładowanie hostów...</p>
         </div>
     </div>
-
-    <!-- Statystyka wykrytych zagrożeń -->
-    <div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card shadow-sm">
-        <div class="card-header bg-white fw-bold">Statystyka: Top 5 Atakujących IP</div>
-        <div class="card-body">
-            <div style="height: 300px;">
-            <canvas id="attacksChart"></canvas>
-            </div>
-        </div>
-        </div>
-    </div>
-    </div>
     
     <!-- SEKCJA 2: Raport Bezpieczeństwa (Nowość) -->
-    <h3 class="mb-3 text-danger">Wykryte Zagrożenia (SIEM)</h3>
+    <hr class="my-5 border-danger opacity-50"></hr>
+    <h3 class="mt-5 mb-3 text-danger">Wykryte Zagrożenia (SIEM)</h3>
     <div class="card shadow-sm">
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -58,6 +45,19 @@
           </table>
         </div>
       </div>    
+    </div>
+    <!-- Statystyka wykrytych zagrożeń -->
+    <hr class="my-5 border-danger opacity-50"></hr>
+    <h3 class="mt-5 mb-3 text-danger">Statystyka: Top 5 Atakujących IP</h3>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div style="height: 300px;">
+            <canvas id="attacksChart"></canvas>
+            </div>
+          </div>
+        </div>
+    
+      </div>
     </div>
   </div>
 </section>

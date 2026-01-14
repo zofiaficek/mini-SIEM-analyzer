@@ -15,7 +15,7 @@ async function securedFetch(url, options = {}) {
     // Konstruujemy nagłówki żądania
     const headers = {
         'Content-Type': 'application/json', // Informujemy serwer, że wysyłamy JSON
-        'X-CSRFToken': getCsrfToken(),      // KLUCZOWE: Dodajemy token CSRF do nagłówka
+        'X-CSRFToken': getCsrfToken(),      // Dodajemy token CSRF do nagłówka
         ...options.headers                  // Pozwalamy na nadpisanie/dodanie innych nagłówków
     };
 
@@ -35,8 +35,11 @@ async function securedFetch(url, options = {}) {
     // Zwracamy sparsowany obiekt JavaScript
     return await res.json();
 }
+//-----------------------------------------------------------------------------------
+
+
 // --- HOSTS (GOTOWE - WZÓR) ---
-export async function fetchHosts() {
+/*export async function fetchHosts() {
     const res = await fetch('/api/hosts');
     return await res.json();
 }
@@ -125,4 +128,73 @@ export async function fetchAlerts() {
     if(!res.ok) throw new Error((await res.json()).error || 'Błąd pobierania alertów');
     return await res.json();
 
+}*/
+
+// --- HOSTY ---
+export async function fetchHosts() {
+    return await securedFetch('/api/hosts');
+}
+
+export async function createHost(data) {
+    return await securedFetch('/api/hosts', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+}
+
+export async function updateHost(id, data) {
+    return await securedFetch(`/api/hosts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+}
+
+export async function removeHost(id) {
+    return await securedFetch(`/api/hosts/${id}`, { 
+        method: 'DELETE' 
+    });
+}
+
+// --- MONITORING ---
+export async function checkHostStatus(id, osType) {
+    const endpoint = (osType === 'LINUX') 
+        ? `/api/hosts/${id}/ssh-info` 
+        : `/api/hosts/${id}/windows-info`;
+    return await securedFetch(endpoint);
+}
+
+export async function triggerLogFetch(hostId) {
+    return await securedFetch(`/api/hosts/${hostId}/logs`, { 
+        method: 'POST' 
+    });
+}
+
+// --- REJESTR IP (ZADANIE 4) ---
+export async function fetchIPs() {
+    return await securedFetch('/api/ips');
+}
+
+export async function createIP(data) {
+    return await securedFetch('/api/ips', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+}
+
+export async function updateIP(id, data) {
+    return await securedFetch(`/api/ips/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+}
+
+export async function removeIP(id) {
+    return await securedFetch(`/api/ips/${id}`, { 
+        method: 'DELETE' 
+    });
+}
+
+// --- ALERTY ---
+export async function fetchAlerts() {
+    return await securedFetch('/api/alerts');
 }

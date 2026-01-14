@@ -176,8 +176,8 @@ async function refreshAlertsTable() {
 
         alerts.forEach(alert => {
             const row = createEl('tr', [], '', alertsBody);
-            if (alert.severity === 'CRITICAL') row.classList.add('table-danger');
-            else if (alert.severity === 'WARNING') row.classList.add('table-warning');
+            if (alert.severity === 'CRITICAL') row.classList.add('row-critical');
+            else if (alert.severity === 'WARNING') row.classList.add('row-warning');
             
             const utcDate = new Date(alert.timestamp.replace(" ", "T") + "Z");
             createEl('td', [], utcDate.toLocaleString(), row);
@@ -197,6 +197,7 @@ async function refreshAlertsTable() {
         console.error("Błąd tabeli alertów:", err);
     }
 }
+
 /**
  * Zadanie dodatkowe 2
  * Funkcja generująca i aktualizująca wykres słupkowy Top 5 atakujących adresów IP.

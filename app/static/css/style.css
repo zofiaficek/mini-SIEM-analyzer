@@ -24,3 +24,16 @@
     text-align: center;
     padding: 5px 0;
 }
+
+/*kolorki dla alertów*/
+.row-critical td {
+    background-color: rgba(255, 0, 0, 0.16) !important; /* Tło komórek */
+    /*border-left: 5px solid #ff0000 !important; 
+    border-right: 5px solid #ff0000 !important;*/
+}
+
+.row-warning td {
+    background-color: rgba(255, 187, 0, 0.236) !important; /* Tło komórek */
+    /*border-left: 5px solid #ffa500 !important;
+    border-right: 5px solid #ffa500!important;*/
+}

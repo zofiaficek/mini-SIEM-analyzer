@@ -83,6 +83,9 @@ class LogAnalyzer:
 
                 if other_hosts_attacked > 0:
                     ip_entry.status = 'BANNED'
+            #---------------------------------------------------------------------
+            
+            
             #    - Jeśli IP ma status 'BANNED' -> Zmień poziom na 'CRITICAL' i dopisz to w treści.
                 if ip_entry.status == 'BANNED':
                     severity = 'CRITICAL'
