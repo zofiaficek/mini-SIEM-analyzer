@@ -1,13 +1,21 @@
 import { createEl, clearContainer } from './dom.js';
-import { fetchHosts, checkHostStatus, triggerLogFetch } from './api.js'; 
+import { fetchHosts, checkHostStatus, triggerLogFetch, fetchAlerts } from './api.js';
 // TODO: Po uzupełnieniu api.js odkomentuj import poniżej:
-import { fetchAlerts } from './api.js';
 
 const hostsContainer = document.getElementById('hostsContainer');
 const alertsBody = document.getElementById('alertsBody');
 
+let attacksChartInstance = null;
+
 export async function initDashboard() {
     if (!hostsContainer) return;
+    try {
+        if (typeof Chart === 'undefined') {
+            await loadChartScript();
+        }
+    } catch (err) {
+        console.error("Nie udało się załadować Chart.js", err);
+    }
 
     await refreshHostsList();
 
@@ -57,6 +65,17 @@ function renderDashboardRow(host) {
     const logsBtn = createEl('button', ['btn', 'btn-outline-dark'], 'Logi', btnGroup);
     logsBtn.title = "Pobierz i przeanalizuj logi (SIEM)";
     logsBtn.addEventListener('click', () => handleFetchLogs(host, logsBtn));
+}
+
+// Funkcja pomocnicza do ładowania biblioteki
+function loadChartScript() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
 }
 
 async function handleCheckStatusFancy(host, container, btn) {
@@ -140,6 +159,10 @@ async function refreshAlertsTable() {
         // Dopóki jej nie napiszesz, poniższa linia będzie rzucać błąd (Uncaught ReferenceError).
         
         const alerts = await fetchAlerts(); 
+
+        // Aktualizujemy wykres za każdym razem, gdy przyjdą nowe dane
+        updateAttacksChart(alerts);
+        clearContainer(alertsBody);
         
         // TYMCZASOWO: Pusta lista, żeby Dashboard się ładował
         // const alerts = []; 
@@ -173,4 +196,42 @@ async function refreshAlertsTable() {
     } catch (err) {
         console.error("Błąd tabeli alertów:", err);
     }
+}
+
+function updateAttacksChart(alerts) {
+    const ctx = document.getElementById('attacksChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+
+    // Agregacja danych dla Top 5 IP
+    const counts = {};
+    alerts.forEach(a => {
+        if (a.source_ip && a.source_ip !== '-') {
+            counts[a.source_ip] = (counts[a.source_ip] || 0) + 1;
+        }
+    });
+
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    
+    if (attacksChartInstance) {
+        attacksChartInstance.destroy();
+    }
+
+    attacksChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sorted.map(i => i[0]),
+            datasets: [{
+                label: 'Liczba ataków',
+                data: sorted.map(i => i[1]),
+                backgroundColor: '#dc3545' // Kolor czerwony zgodny z tematyką SIEM
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            indexAxis: 'y', // Zmiana na wykres poziomy - czytelniejszy dla IP
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
 }
