@@ -32,7 +32,7 @@ def create_app(config_class=Config):
     app.register_blueprint(auth_bp)
 
     # Wyłączenie CSRF dla API (fetch)
-    csrf.exempt(api_bp)
+    # csrf.exempt(api_bp)
 
     # Auto-tworzenie bazy (opcjonalne, jeśli używamy migracji, ale wygodne)
     with app.app_context():

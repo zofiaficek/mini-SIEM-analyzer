@@ -1,32 +1,62 @@
 /**
- * Wrapper na Fetch API do komunikacji z backendem Flask
+ * api.js
+ * Wrapper na Fetch API z obsługą CSRF
  */
 
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+}
+/**
+ * FUNKCJA BAZOWA: securedFetch
+ * To serce naszej komunikacji z backendem. 
+ * Automatyzuje powtarzalne czynności i dba o bezpieczeństwo.
+ */
+async function securedFetch(url, options = {}) {
+    // Konstruujemy nagłówki żądania
+    const headers = {
+        'Content-Type': 'application/json', // Informujemy serwer, że wysyłamy JSON
+        'X-CSRFToken': getCsrfToken(),      // KLUCZOWE: Dodajemy token CSRF do nagłówka
+        ...options.headers                  // Pozwalamy na nadpisanie/dodanie innych nagłówków
+    };
+
+    // Wykonujemy faktyczne połączenie
+    const res = await fetch(url, { ...options, headers });
+    
+    // Globalna obsługa błędów HTTP
+    if (!res.ok) {
+        // Próbujemy wyciągnąć komunikat błędu wysłany przez Flask
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Błąd HTTP ${res.status}`);
+    }
+    
+    // Obsługa odpowiedzi "No Content" 
+    if (res.status === 204) return null;
+
+    // Zwracamy sparsowany obiekt JavaScript
+    return await res.json();
+}
 // --- HOSTS (GOTOWE - WZÓR) ---
 export async function fetchHosts() {
     const res = await fetch('/api/hosts');
     return await res.json();
 }
+
 export async function createHost(data) {
-    const res = await fetch('/api/hosts', {
+    return await securedFetch('/api/hosts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
-    if(!res.ok) throw new Error((await res.json()).error);
-    return await res.json();
 }
+
 export async function updateHost(id, data) {
-    const res = await fetch(`/api/hosts/${id}`, {
+    return await securedFetch(`/api/hosts/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
-    if(!res.ok) throw new Error('Błąd edycji hosta');
-    return await res.json();
 }
+
 export async function removeHost(id) {
-    await fetch(`/api/hosts/${id}`, { method: 'DELETE' });
+    return await securedFetch(`/api/hosts/${id}`, { method: 'DELETE' });
 }
 
 // --- MONITORING / LOGI (GOTOWE) ---
@@ -36,22 +66,12 @@ export async function checkHostStatus(id, osType) {
         : `/api/hosts/${id}/windows-info`;
         
     const res = await fetch(endpoint);
-    if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || `Błąd HTTP ${res.status}`);
-    }
+    if (!res.ok) throw new Error('Błąd pobierania statusu');
     return await res.json();
 }
 
 export async function triggerLogFetch(hostId) {
-    const res = await fetch(`/api/hosts/${hostId}/logs`, {
-        method: 'POST'
-    });
-    if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Błąd pobierania logów');
-    }
-    return await res.json();
+    return await securedFetch(`/api/hosts/${hostId}/logs`, { method: 'POST' });
 }
 
 // ===============================================================
@@ -73,7 +93,7 @@ export async function fetchIPs() {
 export async function createIP(data) {
     // 1. Wykonaj fetch POST na '/api/ips' z danymi (body)
     // 2. Obsłuż błędy (!res.ok)
-    const res = await fetch('/api/ips', {
+    const res = await securedFetch('/api/ips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },    // to co jest w body jest w JSON
         body: JSON.stringify(data)  //zamienia obiekt JS data na tekst
@@ -84,7 +104,7 @@ export async function createIP(data) {
 
 export async function updateIP(id, data) {
     // PUT na /api/ips/<id>
-    const res = await fetch(`/api/ips/${id}`, {
+    const res = await securedFetch(`/api/ips/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },    // to co jest w body jest w JSON
         body: JSON.stringify(data)      //zamienia obiekt JS data na tekst
@@ -95,7 +115,7 @@ export async function updateIP(id, data) {
 
 export async function removeIP(id) {
     // DELETE na /api/ips/<id>
-    const res = await fetch(`/api/ips/${id}`, { method: 'DELETE' });
+    const res = await securedFetch(`/api/ips/${id}`, { method: 'DELETE' });
     if(!res.ok) throw new Error((await res.json()).error || 'Błąd usuwania IP');
 }
 
