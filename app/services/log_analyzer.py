@@ -68,6 +68,21 @@ class LogAnalyzer:
             # 4. Ustal poziom alertu (severity) i treść wiadomości (message):
             #    - Domyślny poziom: 'WARNING'.
 
+            # Automatyczne banowanie (Multi-host attack)
+            if ip_entry.status == 'UNKNOWN':
+                from datetime import timedelta
+                ten_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=10)
+                
+                # Sprawdzamy, czy ten IP atakował inne hosty w ciągu ostatnich 10 min
+                other_hosts_attacked = Alert.query.filter(
+                    Alert.source_ip == ip,
+                    Alert.host_id != host_id,
+                    Alert.timestamp >= ten_minutes_ago
+                ).count()
+
+
+                if other_hosts_attacked > 0:
+                    ip_entry.status = 'BANNED'
             #    - Jeśli IP ma status 'BANNED' -> Zmień poziom na 'CRITICAL' i dopisz to w treści.
                 if ip_entry.status == 'BANNED':
                     severity = 'CRITICAL'
