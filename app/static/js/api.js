@@ -62,6 +62,7 @@ export async function triggerLogFetch(hostId) {
 // Wzoruj się na funkcjach z sekcji HOSTS powyżej.
 
 
+// Fetch - funkcja przegladarki ktora wysyla zapytanie pod konkretny adres (zdefiniowany w hosts.py)
 export async function fetchIPs() {
     // 1. Wykonaj fetch GET na '/api/ips'
     // 2. Zwróć json
@@ -74,34 +75,34 @@ export async function createIP(data) {
     // 2. Obsłuż błędy (!res.ok)
     const res = await fetch('/api/ips', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        headers: { 'Content-Type': 'application/json' },    // to co jest w body jest w JSON
+        body: JSON.stringify(data)  //zamienia obiekt JS data na tekst
     });
     if(!res.ok) throw new Error((await res.json()).error || 'Błąd dodawania IP');
-    return await res.json();
+    return await res.json();    //zmienia JSON na obiekt JS
 }
 
 export async function updateIP(id, data) {
     // PUT na /api/ips/<id>
     const res = await fetch(`/api/ips/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        headers: { 'Content-Type': 'application/json' },    // to co jest w body jest w JSON
+        body: JSON.stringify(data)      //zamienia obiekt JS data na tekst
     });
-    if(!res.ok) throw new Error('Błąd edycji IP');
-    return await res.json();
+    if(!res.ok) throw new Error((await res.json()).error || 'Błąd edycji IP');
+    return await res.json();    //zmienia JSON na obiekt JS
 }
 
 export async function removeIP(id) {
     // DELETE na /api/ips/<id>
     const res = await fetch(`/api/ips/${id}`, { method: 'DELETE' });
-    if(!res.ok) throw new Error('Błąd usuwania IP');
+    if(!res.ok) throw new Error((await res.json()).error || 'Błąd usuwania IP');
 }
 
 export async function fetchAlerts() {
     // GET na /api/alerts
     const res = await fetch('/api/alerts');
-    if(!res.ok) throw new Error('Błąd pobierania alertów');
+    if(!res.ok) throw new Error((await res.json()).error || 'Błąd pobierania alertów');
     return await res.json();
 
 }
