@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.extensions import db
 from app.models import Alert, IPRegistry
 from app.services.data_manager import DataManager
@@ -65,27 +65,25 @@ class LogAnalyzer:
             # 3. Jeśli JEST w bazie -> Zaktualizuj mu last_seen.
             else:
                 ip_entry.last_seen = datetime.now(timezone.utc)
-            # 4. Ustal poziom alertu (severity) i treść wiadomości (message):
-            #    - Domyślny poziom: 'WARNING'.
-
-            # Automatyczne banowanie (Multi-host attack) -> Zadanie dodatkowe 1
+                # -------------------------ZADANIE DODATKOWE 1-------------------------------
             if ip_entry.status == 'UNKNOWN':
-                from datetime import timedelta
                 ten_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=10)
                 
-                # Sprawdzamy, czy ten IP atakował inne hosty w ciągu ostatnich 10 min
+                # SZUKAMY W BAZIE Czy to IP atakowało inne hosty w ciągu ostatnich 10 min
                 other_hosts_attacked = Alert.query.filter(
-                    Alert.source_ip == ip,
-                    Alert.host_id != host_id,
+                    Alert.source_ip == ip,           # Ten sam adres IP
+                    Alert.host_id != host_id,        # INNY host niż ten aktualnie analizowany
                     Alert.timestamp >= ten_minutes_ago
                 ).count()
 
-
                 if other_hosts_attacked > 0:
                     ip_entry.status = 'BANNED'
-            #---------------------------------------------------------------------
+
+                #------------------------------------------------------------------------
+
             
-            
+            # 4. Ustal poziom alertu (severity) i treść wiadomości (message):
+            #    - Domyślny poziom: 'WARNING'.
             #    - Jeśli IP ma status 'BANNED' -> Zmień poziom na 'CRITICAL' i dopisz to w treści.
                 if ip_entry.status == 'BANNED':
                     severity = 'CRITICAL'
@@ -97,7 +95,20 @@ class LogAnalyzer:
                     severity = 'INFO'
                     message = f"Błąd przy próbie logowania z zaufanego IP: ({ip})"
             
+            
             # 5. Stwórz obiekt Alert:
+            existing_alert = Alert.query.filter_by(
+                host_id=host_id,
+                timestamp=row['timestamp'], # Czas z logu
+                source_ip=ip,
+                alert_type=row['alert_type']
+            ).first()
+
+            if existing_alert:
+                # Jeśli alert już jest - nie dodajemy nowego wiersza!
+                continue # Przeskakujemy do następnego logu, nie dodajemy duplikatu
+            
+            # jezeli jeszcze nie istnieje:
             new_alert = Alert(
                 host_id  =host_id,
                 timestamp=row['timestamp'],
@@ -106,7 +117,7 @@ class LogAnalyzer:
                 severity = severity,
                 source_ip = ip
             )
-            
+
             # 6. Dodaj do sesji (db.session.add) i zwiększ licznik alerts_created.
             db.session.add(new_alert)
             alerts_created += 1
