@@ -86,7 +86,7 @@ exit()
 Po skonfigurowaniu bazy możesz uruchomić serwer deweloperski:
 
 ```bash
-flask 
+flask run
 ```
 Domyślnie system dostępny jest pod adresem: http://127.0.0.1:5000
 
