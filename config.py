@@ -17,11 +17,11 @@ class Config:
     SSH_KEY_FILE = os.getenv('SSH_KEY_FILE', '') '''
 
     SSH_DEFAULT_HOST = "127.0.0.1"
-    SSH_DEFAULT_USER = "zosia"
+    SSH_DEFAULT_USER = "username"
     SSH_DEFAULT_PORT = 2223
 
     # 🔑 jedna z dwóch metod autoryzacji (tylko jedna powinna być aktywna)
-    SSH_PASSWORD = "zosia123"   # logowanie hasłem
+    SSH_PASSWORD = "password"   # logowanie hasłem
     SSH_KEY_FILE = None
 
     
