@@ -2,6 +2,18 @@
 
 Projekt autorskiego systemu klasy **SIEM** przeznaczonego do monitorowania bezpieczeństwa infrastruktury IT, centralizacji logów systemowych oraz automatycznej detekcji incydentów w czasie rzeczywistym. System oparty jest na architekturze **Klient-Serwer** z wykorzystaniem frameworka Flask oraz nowoczesnego stacku Data Engineering.
 
+## 🎓 Kontekst projektu
+Projekt został zrealizowany w ramach studiów jako wyzwanie typu **Refactoring & Development**. 
+
+Otrzymany "Start Pack" zawierał podstawowy szkielet aplikacji (Flask), ale posiadał liczne luki (brak hashowania haseł, otwarte API) oraz nie posiadał kluczowej logiki biznesowej.
+
+**Mój zakres prac obejmował:**
+- **Security Hardening:** Implementacja bezpiecznego logowania (Werkzeug) oraz zabezpieczenie endpointów API dekoratorem `@login_required`.
+- **Backend Refactoring:** Naprawa błędów w architekturze bazy danych (m.in. synchronizacja modeli z API) i obsługa błędów procesu ETL.
+- **Logika SIEM:** Stworzenie silnika analizującego logi (Pandas), który koreluje zdarzenia z bazą adresów IP i automatycznie nadaje im priorytety (Threat Intelligence).
+- **Integracja Systemowa:** Skonfigurowanie stabilnego połączenia z hostami Linux (SSH/Paramiko) oraz Windows (PowerShell) w celu przyrostowego pobierania danych.
+- **Frontend-Backend Bridge:** Naprawa komunikacji w JavaScript (Fetch API) i dynamiczne odświeżanie dashboardu po analizie logów.
+
 
 
 ## 🚀 Kluczowe Funkcjonalności
