@@ -3,44 +3,38 @@ from pathlib import Path
 from datetime import datetime
 
 class DataManager:
-    # Ścieżka do folderu storage (obiekt Path)
     STORAGE_DIR = Path.cwd() / "storage"
 
     @staticmethod
     def ensure_storage():
-        """Tworzy folder storage, jeśli nie istnieje"""
-        # exist_ok=True sprawia, że nie wyrzuci błędu, jak folder już jest
+        #creates storage folder if it does not exist
         DataManager.STORAGE_DIR.mkdir(exist_ok=True)
 
     @staticmethod
     def save_logs_to_parquet(log_list, host_id):
-        """
-        Zapisuje listę logów do pliku .parquet
-        """
+        #saves list of logs to a '.parquet' file
         DataManager.ensure_storage()
         
         if not log_list:
             return None, 0
-            
-        # 1. Tworzymy tabelę danych
+
+        # 1. Make DataFrame    
         df = pd.DataFrame(log_list)
         
-        # 2. Uzupełniamy brakujące kolumny
+        # 2. Fill missing columns
         expected_cols = ['timestamp', 'source_ip', 'alert_type', 'user', 'message', 'raw_log']
         for col in expected_cols:
             if col not in df.columns:
                 df[col] = None
 
-        # 3. Generujemy nazwę pliku
+        # 3. Generate filename
         timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"logs_{host_id}_{timestamp_str}.parquet"
         
-        # ZAMIANA: Łączenie ścieżek operatorem '/' (Path) zamiast os.path.join
         file_path = DataManager.STORAGE_DIR / filename
         
-        # 4. Zapis
+        # 4. Write to Parquet
         try:
-            # Pandas natywnie obsługuje obiekty Path
             df.to_parquet(file_path, engine='pyarrow', index=False)
             return filename, len(df)
         except Exception as e:
@@ -49,15 +43,11 @@ class DataManager:
 
     @staticmethod
     def load_logs(filename):
-        """
-        Wczytuje plik Parquet do DataFrame.
-        """
+        #loads Parquet file to DataFrame
         DataManager.ensure_storage()
         
-        # ZAMIANA: Łączenie ścieżek
         file_path = DataManager.STORAGE_DIR / filename
-        
-        # ZAMIANA: Metoda .exists() obiektu Path zamiast os.path.exists()
+
         if not file_path.exists():
             print(f"Warning: Plik {filename} nie istnieje.")
             return pd.DataFrame()

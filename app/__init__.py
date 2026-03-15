@@ -6,13 +6,13 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Inicjalizacja rozszerzeń
+    #initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
     login_manager.init_app(app)
 
-    # Konfiguracja LoginManager
+    #configure loginmanager
     login_manager.login_view = 'auth.login'
     login_manager.login_message = "Zaloguj się, aby uzyskać dostęp."
     login_manager.login_message_category = "warning"
@@ -22,7 +22,7 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # Rejestracja Blueprintów
+    #register blueprints
     from .blueprints.ui import ui_bp
     from .blueprints.api.hosts import api_bp
     from .blueprints.auth import auth_bp
@@ -31,10 +31,10 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
 
-    # Wyłączenie CSRF dla API (fetch)
+    # disable csrf for api (fetch)
     # csrf.exempt(api_bp)
 
-    # Auto-tworzenie bazy (opcjonalne, jeśli używamy migracji, ale wygodne)
+    # auto-create database
     with app.app_context():
         db.create_all()
 

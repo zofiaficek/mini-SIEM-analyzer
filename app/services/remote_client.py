@@ -1,12 +1,8 @@
-# app/services/remote_client.py
 import paramiko
-import os
 
 class RemoteClient:
-    """
-    Wrapper na paramiko.SSHClient.
-    Obsługuje kontekst menedżera (with ... as ...).
-    """
+    #wrapper around paramiko.SSHClient.
+    #supports context manager (with ... as ...)
 
     def __init__(self, host, user, port=22, password=None, key_file=None):
         self.host = host
@@ -18,12 +14,12 @@ class RemoteClient:
         self.sftp = None
 
     def __enter__(self):
-        """Nawiązywanie połączenia"""
+        #establishing a connection
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
         try:
-            print(f"🔄 Łączenie z {self.user}@{self.host}:{self.port}...")
+            print(f"Łączenie z {self.user}@{self.host}:{self.port}...")
             self.client.connect(
                 hostname=self.host,
                 port=self.port,
@@ -35,21 +31,21 @@ class RemoteClient:
                 allow_agent=False
             )
             self.sftp = self.client.open_sftp()
-            print(f"✅ Połączono z {self.host}")
+            print(f"Połączono z {self.host}")
         except Exception as e:
-            print(f"❌ Błąd połączenia: {e}")
-            raise e # Rzucamy dalej, żeby skrypt wiedział, że się nie udało
+            print(f"Błąd połączenia: {e}")
+            raise e
             
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Zamykanie połączenia"""
+        #closing a connection
         if self.sftp: self.sftp.close()
         if self.client: self.client.close()
-        print("🔒 Rozłączono.")
+        print("Rozłączono")
 
     def run(self, command):
-        """Uruchamia komendę i zwraca (stdout, stderr)"""
+        #executes a command and returns (stdout, stderr)
         if not self.client:
             raise ConnectionError("Brak połączenia SSH")
         
@@ -59,12 +55,12 @@ class RemoteClient:
         return out, err
 
     def get_file(self, remote_path, local_path):
-        """Pobiera plik"""
+        #saves a file from the remote server to the local machine
         if self.sftp:
             try:
                 self.sftp.get(remote_path, local_path)
-                print(f"📥 Pobrano: {remote_path} -> {local_path}")
+                print(f"Pobrano: {remote_path} -> {local_path}")
                 return True
             except IOError as e:
-                print(f"❌ Błąd pobierania pliku: {e}")
+                print(f"Błąd pobierania pliku: {e}")
                 return False

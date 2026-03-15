@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db
 
-# === MODEL UŻYTKOWNIKA ===
+#user model (to do)
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -11,26 +11,18 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256))
 
     def set_password(self, password):
-        # TODO: ZADANIE 1 - BEZPIECZEŃSTWO
-        # Zaimplementuj hashowanie hasła przy użyciu generate_password_hash.
-        # Wynik zapisz do pola self.password_hash.
-        
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        # TODO: ZADANIE 1 - BEZPIECZEŃSTWO
-        # Zaimplementuj weryfikację hasła przy użyciu check_password_hash.
-        # Metoda ma zwracać True jeśli hasło jest poprawne, False w przeciwnym razie.
-        
         return check_password_hash(self.password_hash, password)
 
-# === MODELE SYSTEMOWE (GOTOWE) ===
+#system model (ready)
 class Host(db.Model):
     __tablename__ = 'hosts'
     id = db.Column(db.Integer, primary_key=True)
     hostname = db.Column(db.String(100), nullable=False)
     ip_address = db.Column(db.String(15), unique=True, nullable=False)
-    os_type = db.Column(db.String(20))  # WINDOWS, LINUX
+    os_type = db.Column(db.String(20)) 
     
     logs_sources = db.relationship('LogSource', backref='host', lazy='dynamic', cascade="all, delete-orphan")
     alerts = db.relationship('Alert', backref='host', lazy='dynamic', cascade="all, delete-orphan")

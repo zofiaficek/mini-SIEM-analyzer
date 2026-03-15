@@ -1,5 +1,4 @@
 import subprocess
-import json
 
 class WinClient:
     """
@@ -20,7 +19,7 @@ class WinClient:
         full_cmd = ["powershell", "-Command", cmd]
         
         try:
-            # encoding='oem' lub 'cp852' dla polskiego Windowsa
+            # encoding='oem' or 'cp852' for Polish Windows
             result = subprocess.run(
                 full_cmd, 
                 capture_output=True, 

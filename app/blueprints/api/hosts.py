@@ -1,8 +1,6 @@
-import time
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import login_required
 from datetime import timezone, datetime
-import os
 
 from app.models import Host, LogSource, LogArchive, Alert, IPRegistry, Host
 from app.services.remote_client import RemoteClient
@@ -15,7 +13,7 @@ from app.extensions import db
 
 api_bp = Blueprint("api_hosts", __name__)
 
-# --- CRUD HOSTS (GOTOWE - ABY UI DZIAŁAŁO) ---
+#crud hosts (ready)
 
 @api_bp.route("/hosts", methods=["GET"])
 @login_required
@@ -54,7 +52,7 @@ def update_host(host_id):
     db.session.commit()
     return jsonify(host.to_dict()), 200
 
-# --- MONITORING LIVE (GOTOWE) ---
+#live monitoring (ready)
 
 @api_bp.route("/hosts/<int:host_id>/ssh-info", methods=["GET"])
 @login_required
@@ -64,7 +62,7 @@ def get_ssh_info(host_id):
     ssh_port = current_app.config.get("SSH_DEFAULT_PORT", 2222)
     ssh_key = current_app.config.get("SSH_KEY_FILE")
 
-    ssh_pass = current_app.config.get("SSH_PASSWORD")   #[!]
+    ssh_pass = current_app.config.get("SSH_PASSWORD")
     try:
         with RemoteClient(host=host.ip_address, user=ssh_user, port=ssh_port, key_file=ssh_key, password=ssh_pass) as remote:
             ram_out, _ = remote.run("free -m | grep Mem | awk '{print $7}'")
@@ -115,68 +113,50 @@ def get_windows_info(host_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ===================================================================
-# MIEJSCE NA TWOJĄ IMPLEMENTACJĘ (ZADANIE 2 i 3)
-# ===================================================================
 
+#(to do) log collection and etl pipeline
 @api_bp.route("/hosts/<int:host_id>/logs", methods=["POST"])
 @login_required
 def fetch_logs(host_id):
     host = Host.query.get_or_404(host_id)
     
-    # Pobieramy lub tworzymy źródło logów
+    #get or create log source
     log_source = LogSource.query.filter_by(host_id=host.id).first()
     if not log_source:
         log_source = LogSource(host_id=host.id, log_type='security', last_fetch=None)
         db.session.add(log_source)
         db.session.commit()
     
-    # TODO: ZADANIE 2 - INTEGRACJA POBIERANIA LOGÓW
-    # Ten endpoint obecnie nic nie robi. Twoim zadaniem jest jego uzupełnienie.
-    # Wzoruj się na plikach 'test_real_ssh_logs.py' oraz 'test_windows_logs.py'.
-    
-    # KROKI DO WYKONANIA:
-    # 1. Sprawdź host.os_type (LINUX vs WINDOWS).
-    # 2. Użyj odpowiedniego klienta (RemoteClient lub WinClient).
-    # 3. Wywołaj LogCollector.get_linux_logs (lub windows) aby pobrać listę zdarzeń.
-    # 4. WAŻNE: Zapisz pobrane logi do pliku Parquet używając DataManager.save_logs_to_parquet().
-    #    Metoda ta zwróci nazwę pliku (filename).
-    # 5. Zaktualizuj log_source.last_fetch na bieżący czas.
-    # 6. Dodaj wpis do LogArchive (historia pobrań).
-    # 7. Wywołaj LogAnalyzer.analyze_parquet(filename, host.id) aby wykryć zagrożenia.
-
-    fetch_start_time = log_source.last_fetch    # pobranie czasu ostatniego pobrania logów
+    fetch_start_time = log_source.last_fetch 
 
     logs = []
     try:
-        # 1 i 2 - Wybór klienta i pobieranie logow na podstawie OS (przyrostowe)
+        #fetch logs based on os type
         if host.os_type == "LINUX":
             ssh_user = current_app.config.get("SSH_DEFAULT_USER", "vagrant")
-            ssh_port = current_app.config.get("SSH_DEFAULT_PORT", 2223)
+            ssh_port = current_app.config.get("SSH_DEFAULT_PORT", 2222)
             ssh_key = current_app.config.get("SSH_KEY_FILE")
             ssh_pass = current_app.config.get("SSH_PASSWORD")
-            # pobieranie danych uwierzytelniajacych aby nawiazac polaczenie
-            # inicjalizacja klienta SSH
+            
+            #init remote client and fetch logs
             with RemoteClient(host=host.ip_address, user=ssh_user, port=ssh_port, key_file=ssh_key, password=ssh_pass) as client:
-                # wywolanie funkcji zbierajacej logi (pobieranie przyrostowe - tylko nowsze niz fetch_start_time)
                 logs = LogCollector.get_linux_logs(client, last_fetch_time=fetch_start_time)
         
         elif host.os_type == "WINDOWS":
-            #  w przypadku Windows lokalne wywołanie przez WinClient 
+            #fetch windows logs locally
             with WinClient() as client:
-                # pobiera logi z windowsa
                 logs = LogCollector.get_windows_logs(client, last_fetch_time=fetch_start_time)
 
         if not logs:
-            return jsonify({"message": "Brak nowych logów do pobrania", "alerts": 0}), 200  #jak nie ma nowych logów przerywamy proces - nie ma po co tworzyć nowych plików parquet
+            return jsonify({"message": "Brak nowych logów do pobrania", "alerts": 0}), 200  
         
-        # metoda z data_manager.py zwraca filename i ilosc logow
+        #save to parquet and get record count
         filename, log_count = DataManager.save_logs_to_parquet(logs, host.id)
 
-        #aktualizacja ostatniego czasu pobrania na czas aktualny
+        #update last fetch timestamp
         log_source.last_fetch = datetime.now(timezone.utc)
 
-        # dodaje wpis do log archive
+        #create archive record
         archive = LogArchive(
             host_id=host.id,
             filename=filename, 
@@ -184,7 +164,7 @@ def fetch_logs(host_id):
         )
         db.session.add(archive)
 
-        # 7 - Analiza (Wykrywanie zagrożeń)
+        #run threat analysis
         alerts_found = LogAnalyzer.analyze_parquet(filename, host.id)
 
         db.session.commit()
@@ -199,26 +179,21 @@ def fetch_logs(host_id):
         db.session.rollback()
         return jsonify({"error": f"Błąd procesu ETL: {str(e)}"}), 500
     
-    
-    # Na razie zwracamy błąd 501 (Not Implemented)
-    #return jsonify({"message": "Funkcja API nie jest jeszcze gotowa", "alerts": 0}), 501
 
 
-# TODO: ZADANIE 3 - API DLA REJESTRU IP I ALERTÓW
-# Poniższe endpointy są zakomentowane. Musisz je odblokować i ewentualnie uzupełnić,
-# aby Panel Admina mógł zarządzać adresami IP, a Dashboard wyświetlać alerty.
-
+#(to do) threat intelligence and alerts api
 @api_bp.route("/ips", methods=["GET"])
 @login_required
 def get_ips():
+    #get all registered ips
     ips = IPRegistry.query.order_by(IPRegistry.last_seen.desc()).all()
-    return jsonify([ip.to_dict() for ip in ips])    #pobiera liste wszytskich znanych adresow IP i zwraca w formacie JSON
+    return jsonify([ip.to_dict() for ip in ips]) 
 
-@api_bp.route("/ips", methods=["POST"]) #pozwala na reczne dodanie IP do bazy
+@api_bp.route("/ips", methods=["POST"]) 
 @login_required
 def add_ip():
-    # Dodaj nowe IP (pamiętaj o commit)
-    data = request.get_json()   # bierze wszytsko co zostało wysłane przez przeglądarkę i zamienia format danych JSON na słownik dict
+    #manually add ip to registry
+    data = request.get_json()
     if not data or 'ip_address' not in data:
         return jsonify({"error": "Brak adresu IP"}), 400
     
@@ -228,37 +203,36 @@ def add_ip():
     )
     db.session.add(new_ip)
     db.session.commit()
-    return jsonify(new_ip.to_dict()), 201   # tłumaczy dict na json, 201 - utworzono
+    return jsonify(new_ip.to_dict()), 201
 
 @api_bp.route("/ips/<int:ip_id>", methods=["PUT"])
 @login_required
 def update_ip(ip_id):
-    # Edycja stanu
+    #update ip status entry
     ip_entry = IPRegistry.query.get_or_404(ip_id)
-    data = request.get_json()   # bierze wszytsko co zostało wysłane przez przeglądarkę i zamienia format danych JSON na słownik dict
-    
+    data = request.get_json()
     if 'status' in data: ip_entry.status = data['status']
     
     db.session.commit()
-    return jsonify(ip_entry.to_dict()), 200     # tłumaczy dict na json, 200 - OK
+    return jsonify(ip_entry.to_dict()), 200 
 
 @api_bp.route("/ips/<int:ip_id>", methods=["DELETE"])
 @login_required
 def delete_ip(ip_id):
-    # Usuwanie
+    #remove ip from registry
     ip_entry = IPRegistry.query.get_or_404(ip_id)
     db.session.delete(ip_entry)
     db.session.commit()
-    return jsonify({"message": "Usunięto wpis z rejestru IP"}), 200     # tłumaczy dict na json, 200 - OK
+    return jsonify({"message": "Usunięto wpis z rejestru IP"}), 200  
 
 @api_bp.route("/alerts", methods=["GET"])
 @login_required
 def get_recent_alerts():
-    # Zwróć 20 ostatnich alertów posortowanych malejąco po dacie
+    #latest 20 security alerts
     alerts = db.session.query(Alert, Host).join(Host).order_by(Alert.timestamp.desc()).limit(20).all()
     output = []
     for alert, host in alerts:
         a_dict = alert.to_dict()
         a_dict['hostname'] = host.hostname
         output.append(a_dict)
-    return jsonify(output), 200     # tłumaczy dict na json, 200 - OK
+    return jsonify(output), 200
